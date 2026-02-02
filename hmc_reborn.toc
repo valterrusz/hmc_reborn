@@ -1,0 +1,8 @@
+## Interface: 120000
+## Title: HMC Reborn
+## Notes: Plays custom sounds via slash command or UI.
+## Author: Antigravity
+## Version: 1.0
+
+sounds.lua
+core.lua
