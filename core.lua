@@ -185,7 +185,9 @@ local function InitCategories()
     
     -- Special mappings for image names
     local ImageMapping = {
-        ["Pepsi"] = "pepsibela"
+        ["Pepsi"] = "pepsibela",
+        ["Hivatal"] = "polgarjeno",
+        ["Uncategorized"] = "anettka2"
     }
     
     for _, cat in ipairs(SortedCategories) do
