@@ -183,12 +183,17 @@ local function InitCategories()
     local yOffset = -10
     local col = 0
     
+    -- Special mappings for image names
+    local ImageMapping = {
+        ["Pepsi"] = "pepsibela"
+    }
+    
     for _, cat in ipairs(SortedCategories) do
         local btn = CreateFrame("Button", nil, CategoryFrame, "BackdropTemplate")
         btn:SetSize(180, 80)
         btn:SetPoint("TOPLEFT", xOffset, yOffset)
         
-        -- Style the Block
+        -- Default Backdrop (fallback)
         btn:SetBackdrop({
             bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -196,12 +201,30 @@ local function InitCategories()
             insets = { left = 4, right = 4, top = 4, bottom = 4 }
         })
         
+        -- Try to load texture
+        local imageName = ImageMapping[cat] or cat:lower()
+        local texturePath = "Interface\\AddOns\\hmc_reborn\\Images\\" .. imageName .. ".blp"
+        
+        -- Background Texture
+        local bg = btn:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetTexture(texturePath)
+        bg:SetTexCoord(0.1, 0.9, 0.1, 0.9) -- Slight zoom to avoid borders if needed
+        bg:SetAlpha(0.8)
+        
+        -- Dark Overlay for text readability
+        local overlay = btn:CreateTexture(nil, "ARTWORK")
+        overlay:SetAllPoints()
+        overlay:SetColorTexture(0, 0, 0, 0.5) -- 50% black overlay
+        
         -- Hover effect
         btn:SetScript("OnEnter", function(self) 
-            self:SetBackdropBorderColor(1, 0.8, 0, 1) 
+            self:SetBackdropBorderColor(1, 0.8, 0, 1)
+            overlay:SetColorTexture(0, 0, 0, 0.3) -- Lighten overlay on hover
         end)
         btn:SetScript("OnLeave", function(self) 
-            self:SetBackdropBorderColor(1, 1, 1, 1) 
+            self:SetBackdropBorderColor(1, 1, 1, 1)
+            overlay:SetColorTexture(0, 0, 0, 0.5) -- Restore overlay
         end)
         
         -- Text
