@@ -6,7 +6,17 @@ local COMM_PREFIX = "HMCR"
 local Success = C_ChatInfo.RegisterAddonMessagePrefix(COMM_PREFIX)
 
 -- Play Sound & Broadcast Logic
+local lastPlayedTime = 0
 local function PlaySoundEntry(key, source)
+    if source == "self" then
+        local now = GetTime()
+        if (now - lastPlayedTime) < 3 then
+            print("|cffff0000HMC:|r Cooldown active (" .. math.ceil(3 - (now - lastPlayedTime)) .. "s)")
+            return
+        end
+        lastPlayedTime = now
+    end
+
     if HMC_Sounds[key] then
         -- 1. Play locally
         local success = PlaySoundFile(HMC_Sounds[key], "Master")
@@ -74,6 +84,22 @@ f.title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 f.title:SetPoint("TOP", f, "TOP", 0, -5)
 f.title:SetText("HMC Reborn")
 
+-- Search Box
+local searchBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+searchBox:SetSize(200, 30)
+searchBox:SetPoint("TOP", 0, -30)
+searchBox:SetAutoFocus(false)
+searchBox:SetTextInsets(5, 5, 0, 0)
+searchBox:SetFontObject("ChatFontNormal")
+searchBox.Instructions = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+searchBox.Instructions:SetPoint("LEFT", 5, 0)
+searchBox.Instructions:SetText("Search sounds...")
+
+searchBox:SetScript("OnEditFocusGained", function(self) self.Instructions:Hide() end)
+searchBox:SetScript("OnEditFocusLost", function(self) 
+    if self:GetText() == "" then self.Instructions:Show() end 
+end)
+
 -- Copy Box (EditBox)
 local copyBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
 copyBox:SetSize(530, 30)
@@ -84,11 +110,11 @@ copyBox:SetCursorPosition(0)
 
 -- Containers
 local CategoryFrame = CreateFrame("Frame", nil, f)
-CategoryFrame:SetPoint("TOPLEFT", 10, -40)
+CategoryFrame:SetPoint("TOPLEFT", 10, -70)
 CategoryFrame:SetPoint("BOTTOMRIGHT", -10, 50)
 
 local SoundFrameWrapper = CreateFrame("Frame", nil, f)
-SoundFrameWrapper:SetPoint("TOPLEFT", 10, -40)
+SoundFrameWrapper:SetPoint("TOPLEFT", 10, -70)
 SoundFrameWrapper:SetPoint("BOTTOMRIGHT", -10, 50)
 SoundFrameWrapper:Hide()
 
@@ -174,20 +200,17 @@ local function ShowCategories()
     CategoryFrame:Show()
     f.title:SetText("HMC Reborn")
     ReleaseButtons() -- Clean up sound list when leaving
+    searchBox:SetText("")
+    searchBox:ClearFocus()
 end
 
-local function ShowSounds(category)
+local function UpdateSoundList(list)
     ReleaseButtons() -- Clear current list
     
-    CategoryFrame:Hide()
-    SoundFrameWrapper:Show()
-    f.title:SetText("HMC Reborn - " .. category)
-    
     local yOffset = -5
-    local currentGroup = Groups[category]
     
-    if currentGroup then
-        for _, item in ipairs(currentGroup) do
+    if list then
+        for _, item in ipairs(list) do
             local btn = AcquireButton()
             btn:SetPoint("TOPLEFT", 0, yOffset)
             btn:SetText(item.name)
@@ -214,6 +237,49 @@ local function ShowSounds(category)
     end
     content:SetHeight(math.abs(yOffset) + 20)
 end
+
+local function ShowSounds(category)
+    CategoryFrame:Hide()
+    SoundFrameWrapper:Show()
+    f.title:SetText("HMC Reborn - " .. category)
+    
+    UpdateSoundList(Groups[category])
+end
+
+-- Search Logic
+searchBox:SetScript("OnTextChanged", function(self)
+    local query = self:GetText():lower()
+    
+    if query == "" then
+        self.Instructions:Show()
+        if SoundFrameWrapper:IsShown() and f.title:GetText() == "HMC Reborn - Search Results" then
+            ShowCategories()
+        end
+        return
+    end
+    
+    self.Instructions:Hide()
+    
+    CategoryFrame:Hide()
+    SoundFrameWrapper:Show()
+    f.title:SetText("HMC Reborn - Search Results")
+    
+    local matches = {}
+    for name, path in pairs(HMC_Sounds) do
+        if name:lower():find(query, 1, true) then
+            table.insert(matches, {name = name, path = path})
+        end
+    end
+    table.sort(matches, function(a,b) return a.name < b.name end)
+    
+    UpdateSoundList(matches)
+end)
+
+searchBox:SetScript("OnEscapePressed", function(self)
+    self:ClearFocus()
+    self:SetText("")
+    ShowCategories()
+end)
 
 backBtn:SetScript("OnClick", ShowCategories)
 
