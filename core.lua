@@ -32,7 +32,7 @@ f:Hide()
 f.TitleBg:SetHeight(30)
 f.TitleBg:SetColorTexture(0.2, 0.2, 0.2, 1)
 f.title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-f.title:SetPoint("CENTER", f.TitleBg, "CENTER", 0, 0)
+f.title:SetPoint("TOP", f, "TOP", 0, -5)
 f.title:SetText("HMC Reborn")
 
 -- Copy Box (EditBox)
