@@ -1,6 +1,37 @@
 local addonName, addonTable = ...
 
 
+-- Addon Communication Setup
+local COMM_PREFIX = "HMCR"
+local Success = C_ChatInfo.RegisterAddonMessagePrefix(COMM_PREFIX)
+
+-- Play Sound & Broadcast Logic
+local function PlaySoundEntry(key, source)
+    if HMC_Sounds[key] then
+        -- 1. Play locally
+        local success = PlaySoundFile(HMC_Sounds[key], "Master")
+        if not success and source == "self" then
+             print("|cffff0000HMC Error:|r Could not play sound '" .. key .. "'")
+        end
+
+        -- 2. Broadcast if initiated by self and in group
+        if source == "self" then
+            local channel = nil
+            if IsInRaid() then
+                channel = "RAID"
+            elseif IsInGroup() then
+                channel = "PARTY"
+            end
+
+            if channel then
+                C_ChatInfo.SendAddonMessage(COMM_PREFIX, key, channel)
+            end
+        end
+    elseif source == "self" then
+        print("|cffff0000HMC:|r Sound '" .. key .. "' not found. Type /hmc for UI.")
+    end
+end
+
 -- Slash Command Handler
 SLASH_HMC1 = "/hmc"
 SlashCmdList["HMC"] = function(msg)
@@ -8,15 +39,23 @@ SlashCmdList["HMC"] = function(msg)
     
     if cmd == "" or cmd == "ui" then
         addonTable.ShowUI()
-    elseif HMC_Sounds[cmd] then
-        local success = PlaySoundFile(HMC_Sounds[cmd], "Master")
-        if not success then
-             print("|cffff0000HMC Error:|r Could not play sound '" .. HMC_Sounds[cmd] .. "'")
-        end
     else
-        print("|cffff0000HMC:|r Sound '" .. cmd .. "' not found. Type /hmc for UI.")
+        PlaySoundEntry(cmd, "self")
     end
 end
+
+-- Event Handler for Incoming Messages
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("CHAT_MSG_ADDON")
+eventFrame:SetScript("OnEvent", function(self, event, prefix, message, channel, sender)
+    if prefix == COMM_PREFIX then
+        -- Avoid playing own messages (already played locally)
+        local myName = UnitName("player") .. "-" .. GetRealmName()
+        if sender == UnitName("player") or sender == myName then return end
+
+        PlaySoundEntry(message, "remote")
+    end
+end)
 
 -- UI Construction
 local f = CreateFrame("Frame", "HMC_MainFrame", UIParent, "BasicFrameTemplateWithInset")
@@ -161,7 +200,8 @@ local function ShowSounds(category)
                         editBox:Insert("/hmc " .. item.name)
                     end
                 else
-                    PlaySoundFile(item.path, "Master")
+                    PlaySoundEntry(item.name, "self")
+                    
                     copyBox:SetText("/hmc " .. item.name)
                     copyBox:SetCursorPosition(0)
                     copyBox:HighlightText()
