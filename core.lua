@@ -69,7 +69,7 @@ end)
 
 -- UI Construction
 local f = CreateFrame("Frame", "HMC_MainFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(600, 500) -- Made wider for blocks
+f:SetSize(800, 500) -- Made wider for blocks
 f:SetPoint("CENTER")
 f:SetFrameStrata("HIGH")
 f:SetMovable(true)
@@ -175,7 +175,7 @@ local function AcquireButton()
     local btn = table.remove(ButtonPool)
     if not btn then
         btn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
-        btn:SetSize(530, 24)
+        btn:SetSize(730, 24)
         btn:SetNormalFontObject("GameFontHighlightSmall")
         btn:SetHighlightFontObject("GameFontHighlight")
     end
@@ -347,7 +347,7 @@ local function InitCategories()
         
         -- Grid Layout (3 columns)
         col = col + 1
-        if col >= 3 then
+        if col >= 4 then
             col = 0
             xOffset = 10
             yOffset = yOffset - 90
