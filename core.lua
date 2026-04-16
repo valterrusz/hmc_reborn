@@ -293,7 +293,8 @@ local function InitCategories()
     local ImageMapping = {
         ["Pepsi"] = "pepsibela",
         ["Hivatal"] = "polgarjeno",
-        ["Uncategorized"] = "anettka2"
+        ["Anettka"] = "anettka2",
+        ["Uncategorized"] = "jimmy"
     }
     
     for _, cat in ipairs(SortedCategories) do
